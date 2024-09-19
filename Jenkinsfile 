@@ -2,25 +2,25 @@ pipeline {
     agent any
 
     environment {
-        PYTHON_ENV = ".venv"
-        ALLURE_RESULTS_DIR = "reports/allure-results"
+        PYTHON_ENV = "${WORKSPACE}/.venv" // Sanal ortam dizini
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Projeyi GitHub'dan çek
+                // Projeyi GitHub'dan çekiyoruz
                 git 'https://github.com/ugurakyay/Mall_Admin_Automation.git'
             }
         }
 
         stage('Setup Python Environment') {
             steps {
-                // Python sanal ortamını oluştur ve bağımlılıkları yükle
+                // Python sanal ortamı oluştur
+                sh 'python3 -m venv ${PYTHON_ENV}'
+
+                // Sanal ortamı aktive et ve gerekli paketleri yükle
                 sh '''
-                python3 -m venv ${PYTHON_ENV}
                 source ${PYTHON_ENV}/bin/activate
-                pip install --upgrade pip
                 pip install -r requirements.txt
                 '''
             }
@@ -31,33 +31,35 @@ pipeline {
                 // Testleri çalıştır
                 sh '''
                 source ${PYTHON_ENV}/bin/activate
-                pytest --alluredir=${ALLURE_RESULTS_DIR}
+                pytest --alluredir=reports/allure-results
                 '''
             }
         }
 
         stage('Generate Allure Report') {
             steps {
-                // Allure raporunu oluştur
-                sh '''
-                source ${PYTHON_ENV}/bin/activate
-                allure generate ${ALLURE_RESULTS_DIR} -o allure-report --clean
-                '''
-            }
-        }
-
-        stage('Publish Allure Report') {
-            steps {
-                // Allure raporlarını Jenkins üzerinde yayınla
-                allure includeProperties: false, jdk: '', results: [[path: "allure-report"]]
+                // Allure raporlarını oluştur
+                allure([
+                    includeProperties: false,
+                    jdk: '',
+                    reportBuildPolicy: 'ALWAYS',
+                    results: [[path: 'reports/allure-results']]
+                ])
             }
         }
     }
 
     post {
         always {
-            // Her zaman çalıştırılacak olan adımlar (temizlik vb.)
-            cleanWs()
+            // Sonucuna bakılmaksızın çalıştırılacak adımlar
+            archiveArtifacts artifacts: 'reports/allure-results/**', allowEmptyArchive: true
+            junit 'reports/allure-results/*.xml'
+        }
+        failure {
+            // Eğer pipeline başarısız olursa yapılacaklar
+            mail to: 'your-email@example.com',
+                 subject: "Pipeline Failed: ${currentBuild.fullDisplayName}",
+                 body: "Something went wrong. Please check the logs for more details."
         }
     }
 }

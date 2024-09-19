@@ -1,8 +1,9 @@
 import pytest
 import allure
-from pages.login_page import LoginPage
 from utils.driver import get_driver
 from config.settings import BASE_URL, USERNAME, PASSWORD
+from pages.login_page import LoginPage
+
 
 @allure.feature('Login Feature')
 class TestLogin:
