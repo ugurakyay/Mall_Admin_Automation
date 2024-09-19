@@ -1,0 +1,4 @@
+Popup Button Element Info:
+Tag Name: button
+Text: Okudum, Anladım, Onaylıyorum
+Attributes: <button class="MuiButtonBase-root MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium MuiButton-root MuiButton-text MuiButton-textPrimary MuiButton-sizeMedium MuiButton-textSizeMedium css-1hge6xz-MuiButtonBase-root-MuiButton-root" tabindex="0" type="button">Okudum, Anladım, Onaylıyorum<span class="MuiTouchRipple-root css-8je8zh-MuiTouchRipple-root"></span></button>

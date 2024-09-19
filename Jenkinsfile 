@@ -1,0 +1,63 @@
+pipeline {
+    agent any
+
+    environment {
+        PYTHON_ENV = ".venv"
+        ALLURE_RESULTS_DIR = "reports/allure-results"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // Projeyi GitHub'dan çek
+                git 'https://github.com/ugurakyay/Mall_Admin_Automation.git'
+            }
+        }
+
+        stage('Setup Python Environment') {
+            steps {
+                // Python sanal ortamını oluştur ve bağımlılıkları yükle
+                sh '''
+                python3 -m venv ${PYTHON_ENV}
+                source ${PYTHON_ENV}/bin/activate
+                pip install --upgrade pip
+                pip install -r requirements.txt
+                '''
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                // Testleri çalıştır
+                sh '''
+                source ${PYTHON_ENV}/bin/activate
+                pytest --alluredir=${ALLURE_RESULTS_DIR}
+                '''
+            }
+        }
+
+        stage('Generate Allure Report') {
+            steps {
+                // Allure raporunu oluştur
+                sh '''
+                source ${PYTHON_ENV}/bin/activate
+                allure generate ${ALLURE_RESULTS_DIR} -o allure-report --clean
+                '''
+            }
+        }
+
+        stage('Publish Allure Report') {
+            steps {
+                // Allure raporlarını Jenkins üzerinde yayınla
+                allure includeProperties: false, jdk: '', results: [[path: "allure-report"]]
+            }
+        }
+    }
+
+    post {
+        always {
+            // Her zaman çalıştırılacak olan adımlar (temizlik vb.)
+            cleanWs()
+        }
+    }
+}
